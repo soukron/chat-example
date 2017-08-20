@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "description": "my first socket.io app",
   "dependencies": {
-    "express": "^4.15.2",
+    "ejs": "^2.4.1",
+    "express": "^4.13.4",
+    "html": "^1.0.0",
+    "node-random-name": "^1.0.1",
     "socket.io": "^1.7.3"
   },
   "scripts": {

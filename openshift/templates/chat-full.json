@@ -1,0 +1,492 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "chat-full-template",
+    "annotations": {
+      "openshift.io/display-name": "Chat App (Backend + Frontend)",
+      "description": "A very simple chat example used for the Getting Started guide of the Socket.IO website. This template deploys a backend and a frontend with two replicas.",
+      "tags": "quickstart,nodejs",
+      "iconClass": "icon-nodejs",
+      "template.openshift.io/long-description": ""
+    }
+  },
+  "labels": {
+    "template": "chat"
+  },
+  "objects": [
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Exposes and load balances the application pods"
+        },
+        "labels": {
+            "app": "${NAME}"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "8080-tcp",
+            "port": 8080,
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "name": "${NAME}"
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}-backend",
+        "annotations": {
+          "description": "Exposes and load balances the application pods"
+        },
+        "labels": {
+            "app": "${NAME}-backend"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "8080-tcp",
+            "port": 8080,
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "name": "${NAME}-backend"
+        }
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}-backend",
+        "annotations": {
+          "openshift.io/host.generated": "true"
+        }
+      },
+      "spec": {
+        "host": "${BACKEND}",
+        "to": {
+          "kind": "Service",
+           "name": "${NAME}-backend",
+           "weight": 100
+        },
+        "port": {
+          "targetPort": "8080-tcp"
+        },
+        "wildcardPolicy": "None"
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "openshift.io/host.generated": "true",
+          "haproxy.router.openshift.io/balance": "roundrobin"
+        }
+      },
+      "spec": {
+        "to": {
+          "kind": "Service",
+           "name": "chat",
+           "weight": 100
+        },
+        "port": {
+          "targetPort": "8080-tcp"
+        },
+        "wildcardPolicy": "None"
+      }
+    },
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Keeps track of changes in the application image"
+        },
+        "labels": {
+            "app": "${NAME}"
+        }
+      }
+    },
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}-backend",
+        "annotations": {
+          "description": "Keeps track of changes in the application image"
+        },
+        "labels": {
+            "app": "${NAME}-backend"
+        }
+      }
+    },
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Defines how to build the application",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        },
+        "labels": {
+            "app": "${NAME}"
+        }
+      },
+      "spec": {
+        "source": {
+          "type": "Git",
+          "git": {
+            "uri": "${SOURCE_REPOSITORY_URL}",
+            "ref": "${SOURCE_REPOSITORY_REF}"
+          }
+        },
+        "strategy": {
+          "type": "Source",
+          "sourceStrategy": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "namespace": "openshift",
+              "name": "nodejs:6"
+            },
+            "env":  [
+            ],
+            "incremental": true
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "${NAME}:latest"
+          }
+        },
+        "triggers": [
+          {
+            "type": "ImageChange"
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "postCommit": {
+          "script": "npm test"
+        }
+      }
+    },
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}-backend",
+        "annotations": {
+          "description": "Defines how to build the application",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        },
+        "labels": {
+            "app": "${NAME}-backend"
+        }
+      },
+      "spec": {
+        "source": {
+          "type": "Git",
+          "git": {
+            "uri": "${SOURCE_REPOSITORY_URL}",
+            "ref": "${SOURCE_REPOSITORY_REF}"
+          }
+        },
+        "strategy": {
+          "type": "Source",
+          "sourceStrategy": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "namespace": "openshift",
+              "name": "nodejs:6"
+            },
+            "env":  [
+            ],
+            "incremental": true
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "${NAME}-backend:latest"
+          }
+        },
+        "triggers": [
+          {
+            "type": "ImageChange"
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "postCommit": {
+          "script": "npm test"
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Defines how to deploy the application server",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        },
+        "labels": {
+            "app": "${NAME}"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${NAME}:latest",
+                "namespace": "${NAMESPACE}"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 2,
+        "selector": {
+          "name": "${NAME}"
+        },
+        "template": {
+          "metadata": {
+            "name": "${NAME}",
+            "labels": {
+              "name": "${NAME}",
+              "app": "${NAME}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${NAME}",
+                "image": "${NAME}",
+                "ports": [
+                  {
+                    "containerPort": 8080
+                  }
+                ],
+                "livenessProbe": {
+                  "timeoutSeconds": 3,
+                  "initialDelaySeconds": 30,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 8080
+                  }
+                },
+                "readinessProbe": {
+                    "timeoutSeconds": 3,
+                    "initialDelaySeconds": 10,
+                    "httpGet": {
+                        "path": "/health",
+                        "port": 8080
+                    }
+                },
+                "resources": {
+                    "limits": {
+                        "memory": "512Mi"
+                    }
+                },
+                "env": [
+                    {
+                        "name": "PORT",
+                        "value": "8080"
+                    },
+                    {
+                        "name": "BCOLOR",
+                        "value": "${BCOLOR}"
+                    },
+                    {
+                        "name": "BACKEND_URL",
+                        "value": "http://${BACKEND}/"
+                    }
+                ],
+                "resources": {
+		      "limits": {
+			  "memory": "512Mi"
+		      }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}-backend",
+        "annotations": {
+          "description": "Defines how to deploy the application server",
+          "template.alpha.openshift.io/wait-for-ready": "true"
+        },
+        "labels": {
+            "app": "${NAME}-backend"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${NAME}-backend:latest",
+                "namespace": "${NAMESPACE}"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "${NAME}-backend"
+        },
+        "template": {
+          "metadata": {
+            "name": "${NAME}-backend",
+            "labels": {
+              "name": "${NAME}-backend",
+              "app": "${NAME}-backend"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${NAME}-backend",
+                "image": "${NAME}-backend",
+                "ports": [
+                  {
+                    "containerPort": 8080
+                  }
+                ],
+                "livenessProbe": {
+                  "timeoutSeconds": 3,
+                  "initialDelaySeconds": 30,
+                  "httpGet": {
+                    "path": "/",
+                    "port": 8080
+                  }
+                },
+                "readinessProbe": {
+                    "timeoutSeconds": 3,
+                    "initialDelaySeconds": 10,
+                    "httpGet": {
+                        "path": "/health",
+                        "port": 8080
+                    }
+                },
+                "resources": {
+                    "limits": {
+                        "memory": "512Mi"
+                    }
+                },
+                "env": [
+                    {
+                        "name": "PORT",
+                        "value": "8080"
+                    },
+                    {
+                        "name": "BCOLOR",
+                        "value": "${BCOLOR}"
+                    },
+                    {
+                        "name": "BACKEND_URL",
+                        "value": "/"
+                    }
+                ],
+                "resources": {
+		      "limits": {
+			  "memory": "512Mi"
+		      }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "NAME",
+      "displayName": "Name",
+      "description": "The name assigned to your chat",
+      "required": true,
+      "value": "chat"
+    },
+    {
+      "name": "NAMESPACE",
+      "displayName": "Namespace",
+      "description": "The namespace for ImageStreams",
+      "required": true,
+      "value": "meetup"
+    },
+    {
+      "name": "SOURCE_REPOSITORY_URL",
+      "displayName": "Git Repository URL",
+      "description": "The URL of the repository with your application source code.",
+      "required": true,
+      "value": "https://github.com/soukron/chat-example"
+    },
+    {
+      "name": "SOURCE_REPOSITORY_REF",
+      "displayName": "Git Reference",
+      "description": "Set this to a branch name, tag or other ref of your repository if you are not using the default branch."
+    },
+    {
+      "name": "BCOLOR",
+      "displayName": "Button color",
+      "description": "Set this to a color to be used in the Send button"
+    },
+    {
+      "name": "BACKEND",
+      "displayName": "Socket.io backend FQDN",
+      "description": "Set this to a valid Socket.io backend fully-qualified name",
+      "value": "chat-backend-meetup.apps.ocp1.oshift.net"
+    }
+  ]
+}
