@@ -61,7 +61,7 @@
     <script src="/js/socket.io-1.2.0.js"></script>
     <script>
       $(function () {
-        var socket = io('http://backend.meetup.svc:8080/');
+        var socket = io('http://backend-meetup.apps.ocp1.oshift.net/');
         $('form').submit(function(){
           socket.emit('chat message', $('#m').val());
           $('#m').val('');
