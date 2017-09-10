@@ -18,7 +18,9 @@ app.get('/health', function(req, res) {
 // Send index
 app.get('/', function(req, res){
   res.render(__dirname + '/index.html', 
-    { btncolor: process.env.BCOLOR || 'rgb(130, 224, 255)',
+    { 
+      backend: process.env.BACKEND_URL || '/',
+      btncolor: process.env.BCOLOR || 'rgb(130, 224, 255)',
       servername: process.env.HOSTNAME
     }
   );
