@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-backend
+  namespace: chat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: chat-backend
+  template:
+    metadata:
+      labels:
+        name: chat-backend
+      name: chat-backend
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "8080"
+        - name: BCOLOR
+        - name: BACKEND_URL
+          value: http://chat-backend-chat.apps.sgarcia-ocp4.aws.gmbros.net/
+        image: quay.io/soukron/chat-backend:latest
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+        name: chat-backend
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP

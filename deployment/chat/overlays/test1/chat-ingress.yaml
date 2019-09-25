@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: chat
+  namespace: chat
+spec:
+  rules:
+  - host: chat-chat.apps.sgarcia-ocp4-test1.aws.gmbros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: chat
+          servicePort: 8080

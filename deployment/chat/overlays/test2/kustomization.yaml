@@ -1,0 +1,5 @@
+bases:
+- ../../base
+patchesStrategicMerge:
+- chat-ingress.yaml
+- chat-deployment.yaml

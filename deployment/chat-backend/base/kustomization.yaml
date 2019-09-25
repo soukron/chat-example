@@ -1,0 +1,5 @@
+resources:
+- chat-backend-deployment.yaml
+- chat-backend-namespace.yaml
+- chat-backend-ingress.yaml
+- chat-backend-service.yaml

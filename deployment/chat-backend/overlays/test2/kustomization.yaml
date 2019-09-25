@@ -1,0 +1,4 @@
+bases:
+- ../../base
+patchesStrategicMerge:
+- chat-backend-ingress.yaml
